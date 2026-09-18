@@ -6,6 +6,7 @@ import (
 	"aquaculture-water-feeding-control/backend/internal/model"
 	"aquaculture-water-feeding-control/backend/internal/repository"
 	"math"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -268,6 +269,9 @@ func (s *ExecutionService) validateExecution(pondID, planID uint, amount float64
 		return model.FeedingPlan{}, model.Pond{}, model.WaterReading{}, NewError(CodeConflict, "最新水质读数已超过 24 小时")
 	}
 	if latest.DissolvedOxygen < plan.MinOxygen || latest.RiskLevel == constants.RiskCritical {
+		if latest.RiskLevel == constants.RiskCritical {
+			return model.FeedingPlan{}, model.Pond{}, model.WaterReading{}, NewError(CodeConflict, strings.Replace(criticalReadingsBlock(latest.ReviewStatus), "放行投喂", "安排投喂", 1))
+		}
 		return model.FeedingPlan{}, model.Pond{}, model.WaterReading{}, NewError(CodeConflict, "当前水质不满足计划执行条件")
 	}
 	dayStart := time.Date(scheduledAt.UTC().Year(), scheduledAt.UTC().Month(), scheduledAt.UTC().Day(), 0, 0, 0, 0, time.UTC)

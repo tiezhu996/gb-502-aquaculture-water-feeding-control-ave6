@@ -61,6 +61,20 @@ const (
 	RiskCritical RiskLevel = "critical"
 )
 
+// ReadingReviewStatus 仅对严重（critical）读数使用：首名操作员核实后进入待复核，
+// 必须由另一名操作员通过或否决后才闭环。正常/预警读数保持单级确认，取值留空。
+type ReadingReviewStatus string
+
+const (
+	ReviewPending  ReadingReviewStatus = "pending"  // 一级核实完成，等待另一人二级复核
+	ReviewApproved ReadingReviewStatus = "approved" // 二级复核通过，读数生效
+	ReviewRejected ReadingReviewStatus = "rejected" // 二级复核否决，保持严重并写明原因
+)
+
+func (s ReadingReviewStatus) Valid() bool {
+	return s == "" || s == ReviewPending || s == ReviewApproved || s == ReviewRejected
+}
+
 type ExecutionStatus string
 
 const (

@@ -3,6 +3,7 @@ export type PlanStatus = 'draft' | 'pending' | 'approved' | 'executed'
 export type RiskLevel = 'normal' | 'warning' | 'critical'
 export type ExecutionStatus = 'scheduled' | 'running' | 'completed' | 'cancelled'
 export type UserRole = 'admin' | 'manager' | 'operator' | 'viewer'
+export type ReadingReviewStatus = '' | 'pending' | 'approved' | 'rejected'
 
 export const pondStatusLabels: Record<PondStatus, string> = {
   active: '运行中',
@@ -21,6 +22,13 @@ export const riskLabels: Record<RiskLevel, string> = {
   normal: '正常',
   warning: '预警',
   critical: '严重',
+}
+
+export const readingReviewStatusLabels: Record<ReadingReviewStatus, string> = {
+  '': '无需复核',
+  pending: '待二级复核',
+  approved: '复核通过',
+  rejected: '复核否决',
 }
 
 export const executionStatusLabels: Record<ExecutionStatus, string> = {

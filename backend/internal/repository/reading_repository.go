@@ -25,7 +25,7 @@ func (r *ReadingRepository) List(query dto.PageQuery, pondID uint, unconfirmed b
 		base = base.Where("risk_level = ?", query.Status)
 	}
 	if unconfirmed {
-		base = base.Where("confirmed = ? AND risk_level <> ?", false, "normal")
+		base = base.Where("risk_level <> ? AND (confirmed = ? OR (risk_level = ? AND review_status <> ?))", "normal", false, "critical", "approved")
 	}
 	var total int64
 	if err := base.Count(&total).Error; err != nil {

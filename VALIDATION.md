@@ -101,3 +101,15 @@ docker compose down -v --remove-orphans
 - 生产环境拒绝默认、占位或短于 32 字符的 JWT 密钥；外部 request ID 只接受安全字符；前端导航前会通过 `/auth/me` 复核缓存身份，损坏缓存会被清理。
 
 本轮重新执行 `go test ./...`、`go test -race ./...`、`go vet ./...`、`go build ./...`、`npm run build`、`docker compose config --quiet`、`docker compose up -d --build` 和 `git diff --check`，均退出 0。真实空卷流程完整覆盖读数创建、计划提交/批准、两条执行安排、并发完成、日累计阻断、逆向状态阻断、最终计划闭合及审计行数核对。
+
+## 2026-09-18 严重读数双人复核闭环
+
+- 严重（critical）读数新增两级流程：`PATCH /api/readings/:id/confirm` 只做首名操作员一级核实，写入 `review_status=pending` 与核实人，`confirmed` 保持 false，不解除异常；`PATCH /api/readings/:id/review/approve|reject` 由另一名操作员二级复核，通过才 `confirmed=true` 生效，否决则保持严重并记录至少 10 字原因。正常、预警读数的单级确认与现有启动方式完全不变。
+- 同一人不得完成两级：服务端比对 `verified_by_user_id` 与当前 JWT 用户，实测同一 `operator` 先核实再通过返回 409；新一轮核实后身份会重新校验。
+- 重复或并发复核只能产生一个结果：二级入口在 SERIALIZABLE 事务内先 `SELECT ... FOR UPDATE` 并校验 `pending`，实测并发两个 approve 得到 1 个 200、1 个 409；通过/否决后再次通过、通过后再否决、第三次复核均 409。
+- 否决保持严重且闭环可重启：`review_status=rejected`、`confirmed=false`、原因必填；处置后可重新一级核实，清空上一轮复核字段，再由不同的人复核。
+- 待复核期间不得退回更早读数放行：计划批准、执行安排、投喂建议统一以 `LatestForPond` 最新读数判定，pending/rejected 严重读数分别返回明确 409，实测已有更早正常/已确认预警读数和已批准计划时，新严重读数待复核仍阻断批准（409，“等待另一名操作员复核”）、阻断安排（409，“不能退回更早读数放行”），建议结果为 hold。已通过复核的严重读数仍沿用原红线不可批准。
+- 待复核的严重读数禁止删除；预警读数的确认/重复确认语义保持不变，确认后可正常批准计划并安排执行。
+- RBAC：两个二级接口仍在 `admin/manager/operator` 写分组内，`viewer` 调用返回 403；页面按当前用户隐藏本人待复核记录的“通过/否决”按钮。
+- 前端读数页新增复核状态列（待一级核实/待二级复核/复核通过/复核否决及两级操作人）、一级核实对话框和二级通过/否决对话框；审计页新增 `verify_critical/review_approve/review_reject` 文案；真实审计链可见两级由不同人员完成。
+- 新增 `service/reading_review_test.go` 覆盖正常/预警单级、严重一级仅待复核、同人两级拒绝、重复复核唯一结果、否决不闭环可重启、阻断文案 7 组用例；`go test ./...`、`go vet ./...`、`go build ./...`、`npm run build`（含 `vue-tsc`）均退出 0。

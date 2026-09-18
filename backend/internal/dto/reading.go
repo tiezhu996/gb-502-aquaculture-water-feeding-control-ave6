@@ -13,6 +13,12 @@ type WaterReadingInput struct {
 	Source          string    `json:"source" binding:"required,oneof=sensor manual import"`
 }
 
+// ConfirmReadingInput 用于预警读数的单级确认，以及严重读数首名操作员的一级核实。
 type ConfirmReadingInput struct {
 	Note string `json:"note" binding:"required,min=2,max=500"`
+}
+
+// RejectReadingInput 用于第二名操作员否决严重读数，必须写明否决原因。
+type RejectReadingInput struct {
+	Reason string `json:"reason" binding:"required,min=10,max=500"`
 }

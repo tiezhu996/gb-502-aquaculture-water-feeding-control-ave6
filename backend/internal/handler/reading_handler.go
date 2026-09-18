@@ -77,6 +77,42 @@ func (h *ReadingHandler) Confirm(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
+func (h *ReadingHandler) ApproveReview(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+	var input dto.ConfirmReadingInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		respondError(c, service.NewError(service.CodeValidation, "请填写二级复核意见"))
+		return
+	}
+	result, err := h.service.ApproveReview(id, input.Note, actorFromContext(c))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+func (h *ReadingHandler) RejectReview(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+	var input dto.RejectReadingInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		respondError(c, service.NewError(service.CodeValidation, "否决严重读数需写明至少 10 个字的原因"))
+		return
+	}
+	result, err := h.service.RejectReview(id, input.Reason, actorFromContext(c))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
 func (h *ReadingHandler) Delete(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {

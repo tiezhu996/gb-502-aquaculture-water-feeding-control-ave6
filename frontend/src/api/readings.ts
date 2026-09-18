@@ -14,6 +14,14 @@ export const readingApi = {
     const response = await client.patch<ApiEnvelope<WaterReading>>(`/readings/${id}/confirm`, { note })
     return response.data.data
   },
+  async approveReview(id: number, note: string) {
+    const response = await client.patch<ApiEnvelope<WaterReading>>(`/readings/${id}/review/approve`, { note })
+    return response.data.data
+  },
+  async rejectReview(id: number, reason: string) {
+    const response = await client.patch<ApiEnvelope<WaterReading>>(`/readings/${id}/review/reject`, { reason })
+    return response.data.data
+  },
   async remove(id: number) {
     await client.delete(`/readings/${id}`)
   },

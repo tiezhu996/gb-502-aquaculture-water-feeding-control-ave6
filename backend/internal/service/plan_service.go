@@ -66,7 +66,11 @@ func (s *PlanService) Recommendation(pondID uint, weather string) (dto.FeedingRe
 	if reading.RiskLevel == constants.RiskCritical || reading.DissolvedOxygen < plan.MinOxygen {
 		factor = 0
 		action = "hold"
-		reasons = append(reasons, "水质严重异常或溶解氧低于计划阈值，暂停投喂")
+		if reading.RiskLevel == constants.RiskCritical && reading.ReviewStatus == constants.ReviewPending {
+			reasons = append(reasons, "严重读数正在等待另一名操作员复核，以最新读数为准暂停投喂，不得退回更早读数")
+		} else {
+			reasons = append(reasons, "水质严重异常或溶解氧低于计划阈值，暂停投喂")
+		}
 	} else {
 		if reading.RiskLevel == constants.RiskWarning {
 			factor *= 0.7
@@ -254,7 +258,7 @@ func (s *PlanService) Approve(id uint, reason string, actor Actor) (model.Feedin
 		return model.FeedingPlan{}, NewError(CodeConflict, "最新溶解氧低于计划阈值，不能批准")
 	}
 	if latest.RiskLevel == constants.RiskCritical {
-		return model.FeedingPlan{}, NewError(CodeConflict, "存在严重水质异常，确认留痕后仍不可批准投喂")
+		return model.FeedingPlan{}, NewError(CodeConflict, strings.Replace(criticalReadingsBlock(latest.ReviewStatus), "放行投喂", "批准计划", 1))
 	}
 	if latest.RiskLevel != constants.RiskNormal && !latest.Confirmed {
 		return model.FeedingPlan{}, NewError(CodeConflict, "存在未确认的水质异常")
