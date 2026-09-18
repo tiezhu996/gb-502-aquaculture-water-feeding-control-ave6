@@ -61,6 +61,28 @@ const (
 	RiskCritical RiskLevel = "critical"
 )
 
+// ReadingReview 表示水质读数（尤其是严重读数）的人工复核闭环状态。
+// 正常读数为 not_required；预警读数保持单级确认 unverified -> approved；
+// 严重读数必须双人复核：unverified -> pending_review -> approved / rejected，
+// rejected 后允许首名操作员重新核实，再次进入 pending_review。
+type ReadingReview string
+
+const (
+	ReadingReviewNotRequired   ReadingReview = "not_required"
+	ReadingReviewUnverified    ReadingReview = "unverified"
+	ReadingReviewPendingReview ReadingReview = "pending_review"
+	ReadingReviewApproved      ReadingReview = "approved"
+	ReadingReviewRejected      ReadingReview = "rejected"
+)
+
+func (s ReadingReview) Valid() bool {
+	switch s {
+	case ReadingReviewNotRequired, ReadingReviewUnverified, ReadingReviewPendingReview, ReadingReviewApproved, ReadingReviewRejected:
+		return true
+	}
+	return false
+}
+
 type ExecutionStatus string
 
 const (

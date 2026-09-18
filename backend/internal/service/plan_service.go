@@ -253,11 +253,8 @@ func (s *PlanService) Approve(id uint, reason string, actor Actor) (model.Feedin
 	if latest.DissolvedOxygen < plan.MinOxygen {
 		return model.FeedingPlan{}, NewError(CodeConflict, "最新溶解氧低于计划阈值，不能批准")
 	}
-	if latest.RiskLevel == constants.RiskCritical {
-		return model.FeedingPlan{}, NewError(CodeConflict, "存在严重水质异常，确认留痕后仍不可批准投喂")
-	}
-	if latest.RiskLevel != constants.RiskNormal && !latest.Confirmed {
-		return model.FeedingPlan{}, NewError(CodeConflict, "存在未确认的水质异常")
+	if message := ReadingBlockMessage(latest); message != "" {
+		return model.FeedingPlan{}, NewError(CodeConflict, message)
 	}
 	before := plan
 	now := time.Now().UTC()

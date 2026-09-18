@@ -77,6 +77,25 @@ func (h *ReadingHandler) Confirm(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
+// Review 处理严重读数双人复核闭环的第二级终审（通过/否决）。
+func (h *ReadingHandler) Review(c *gin.Context) {
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+	var input dto.ReviewCriticalReadingInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		respondError(c, service.NewError(service.CodeValidation, "复核参数不合法"))
+		return
+	}
+	result, err := h.service.ReviewCritical(id, input.Approved, input.Note, actorFromContext(c))
+	if err != nil {
+		respondError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
 func (h *ReadingHandler) Delete(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {

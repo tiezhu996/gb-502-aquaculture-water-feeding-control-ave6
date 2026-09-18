@@ -35,10 +35,35 @@ func Open(databaseURL, environment string) (*gorm.DB, error) {
 	); err != nil {
 		return nil, fmt.Errorf("migrate database: %w", err)
 	}
+	if err := backfillReviewStatuses(db); err != nil {
+		return nil, fmt.Errorf("backfill reading review status: %w", err)
+	}
 	if err := seed(db); err != nil {
 		return nil, fmt.Errorf("seed database: %w", err)
 	}
 	return db, nil
+}
+
+func backfillReviewStatuses(db *gorm.DB) error {
+	updates := []struct {
+		risk      constants.RiskLevel
+		confirmed bool
+		status    constants.ReadingReview
+	}{
+		{constants.RiskNormal, false, constants.ReadingReviewNotRequired},
+		{constants.RiskWarning, true, constants.ReadingReviewApproved},
+		{constants.RiskWarning, false, constants.ReadingReviewUnverified},
+		{constants.RiskCritical, true, constants.ReadingReviewApproved},
+		{constants.RiskCritical, false, constants.ReadingReviewUnverified},
+	}
+	for _, entry := range updates {
+		if err := db.Model(&model.WaterReading{}).
+			Where("risk_level = ? AND confirmed = ? AND (review_status = '' OR review_status IS NULL)", entry.risk, entry.confirmed).
+			Update("review_status", entry.status).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func seed(db *gorm.DB) error {

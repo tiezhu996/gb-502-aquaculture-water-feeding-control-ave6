@@ -37,7 +37,7 @@ function entityLabel(value: string) {
 }
 
 function actionLabel(value: string) {
-  return ({ create: '创建', update: '更新', delete: '删除', confirm: '确认异常', revise: '版本修订', submit: '提交', approve: '批准', revoke: '撤销', schedule: '安排执行', complete: '完成反馈', execute: '计划执行' } as Record<string, string>)[value] || value
+  return ({ create: '创建', update: '更新', delete: '删除', confirm: '确认异常', verify: '严重读数首核送审', review_approve: '复核通过', review_reject: '复核否决', revise: '版本修订', submit: '提交', approve: '批准', revoke: '撤销', schedule: '安排执行', complete: '完成反馈', execute: '计划执行' } as Record<string, string>)[value] || value
 }
 
 function pretty(value: string) {

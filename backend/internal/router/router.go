@@ -62,6 +62,7 @@ func New(cfg config.Config, redisClient *redis.Client, auth *service.AuthService
 	readingWrite.Use(middleware.RequireRoles("admin", "manager", "operator"))
 	readingWrite.POST("", h.Readings.Create)
 	readingWrite.PATCH("/:id/confirm", h.Readings.Confirm)
+	readingWrite.PATCH("/:id/review", h.Readings.Review)
 	readingDelete := protected.Group("/readings")
 	readingDelete.Use(middleware.RequireRoles("admin", "manager"))
 	readingDelete.DELETE("/:id", h.Readings.Delete)

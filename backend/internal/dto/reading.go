@@ -16,3 +16,10 @@ type WaterReadingInput struct {
 type ConfirmReadingInput struct {
 	Note string `json:"note" binding:"required,min=2,max=500"`
 }
+
+// ReviewCriticalReadingInput 是第二名操作员对严重读数待复核记录的终审输入。
+// Approved=false（否决）时必须写明原因。
+type ReviewCriticalReadingInput struct {
+	Approved bool   `json:"approved"`
+	Note     string `json:"note" binding:"max=500"`
+}

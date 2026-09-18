@@ -1,4 +1,4 @@
-import type { ExecutionStatus, PlanStatus, PondStatus, RiskLevel, UserRole } from './enums'
+import type { ExecutionStatus, PlanStatus, PondStatus, ReadingReviewStatus, RiskLevel, UserRole } from './enums'
 
 export interface BaseModel {
   id: number
@@ -37,6 +37,14 @@ export interface WaterReading extends BaseModel {
   source: 'sensor' | 'manual' | 'import'
   riskLevel: RiskLevel
   alertMessage: string
+  reviewStatus: ReadingReviewStatus
+  verifiedByUserId: number
+  verifiedBy: string
+  verifiedAt?: string
+  reviewByUserId: number
+  reviewBy: string
+  reviewAt?: string
+  reviewNote: string
   confirmed: boolean
   confirmedBy: string
   confirmedAt?: string

@@ -267,8 +267,11 @@ func (s *ExecutionService) validateExecution(pondID, planID uint, amount float64
 	if time.Since(latest.MeasuredAt) > 24*time.Hour {
 		return model.FeedingPlan{}, model.Pond{}, model.WaterReading{}, NewError(CodeConflict, "最新水质读数已超过 24 小时")
 	}
-	if latest.DissolvedOxygen < plan.MinOxygen || latest.RiskLevel == constants.RiskCritical {
-		return model.FeedingPlan{}, model.Pond{}, model.WaterReading{}, NewError(CodeConflict, "当前水质不满足计划执行条件")
+	if latest.DissolvedOxygen < plan.MinOxygen {
+		return model.FeedingPlan{}, model.Pond{}, model.WaterReading{}, NewError(CodeConflict, "当前溶解氧低于计划阈值，不满足执行条件")
+	}
+	if message := ReadingBlockMessage(latest); message != "" {
+		return model.FeedingPlan{}, model.Pond{}, model.WaterReading{}, NewError(CodeConflict, message)
 	}
 	dayStart := time.Date(scheduledAt.UTC().Year(), scheduledAt.UTC().Month(), scheduledAt.UTC().Day(), 0, 0, 0, 0, time.UTC)
 	plannedForDay, err := s.repo.PlannedAmountForDay(pondID, dayStart, dayStart.Add(24*time.Hour), excludedID)
